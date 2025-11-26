@@ -42,9 +42,9 @@ const Signup = () => {
       if (data.user) {
         toast({
           title: "Inscription réussie !",
-          description: "Vous pouvez maintenant vous connecter.",
+          description: "Vous êtes maintenant connecté.",
         });
-        navigate("/login");
+        navigate(`/dashboard/${userType}`);
       }
     } catch (error: any) {
       toast({
