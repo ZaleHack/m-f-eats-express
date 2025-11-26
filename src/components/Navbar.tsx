@@ -39,7 +39,10 @@ const Navbar = () => {
     { href: "/", label: "Accueil" },
     { href: "/restaurants", label: "Restaurants" },
     ...(isAuthenticated
-      ? [{ href: getDashboardLink(), label: "Tableau de bord" }]
+      ? [
+          { href: getDashboardLink(), label: "Tableau de bord" },
+          { href: "/profile", label: "Profil" },
+        ]
       : [
           { href: "/become-partner", label: "Devenir partenaire" },
           { href: "/become-driver", label: "Devenir livreur" },

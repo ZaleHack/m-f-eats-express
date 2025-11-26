@@ -16,12 +16,26 @@ import { Tables } from '@/integrations/supabase/types';
 type Restaurant = Tables<'restaurants'>;
 type Order = Tables<'orders'>;
 type MenuItem = Tables<'menu_items'>;
+type DriverOverview = {
+  id: string;
+  name: string;
+  phone: string;
+  vehicle: string;
+  zones: string;
+  isAvailable: boolean;
+};
 
 const RestaurantDashboard = () => {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [driverPool, setDriverPool] = useState<DriverOverview[]>([
+    { id: 'drv-01', name: 'Awa Diop', phone: '+221770000001', vehicle: 'Moto', zones: 'Plateau, Point E', isAvailable: true },
+    { id: 'drv-02', name: 'Moussa Fall', phone: '+221780000002', vehicle: 'Scooter', zones: 'Almadies, Ouakam', isAvailable: false },
+    { id: 'drv-03', name: 'Khady Sow', phone: '+221760000003', vehicle: 'Vélo', zones: 'Fann, Mermoz', isAvailable: true },
+  ]);
+  const [assignedDrivers, setAssignedDrivers] = useState<DriverOverview[]>([]);
   const [newItem, setNewItem] = useState({
     name: '',
     description: '',
@@ -118,7 +132,26 @@ const RestaurantDashboard = () => {
     setMenuItems((items) => items.filter((item) => item.id !== id));
   };
 
+  const assignDriver = (driverId: string) => {
+    const driver = driverPool.find((d) => d.id === driverId);
+    if (!driver) return;
+    setAssignedDrivers((current) => [...current, driver]);
+    setDriverPool((current) => current.filter((d) => d.id !== driverId));
+  };
+
+  const unassignDriver = (driverId: string) => {
+    const driver = assignedDrivers.find((d) => d.id === driverId);
+    if (!driver) return;
+    setDriverPool((current) => [driver, ...current]);
+    setAssignedDrivers((current) => current.filter((d) => d.id !== driverId));
+  };
+
   const pendingOrders = orders.filter(o => ['pending', 'confirmed'].includes(o.status));
+  const getOrderStep = (status: string) => {
+    const steps = ['pending', 'confirmed', 'preparing', 'ready', 'in_delivery', 'delivered'];
+    const index = steps.indexOf(status);
+    return index === -1 ? 0 : index;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -145,31 +178,92 @@ const RestaurantDashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 md:grid-cols-3 mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Commandes en attente</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{pendingOrders.length}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Total commandes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{orders.length}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Éléments au menu</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{menuItems.length}</div>
-              </CardContent>
-            </Card>
+          <div className="space-y-8">
+            <div className="grid gap-6 md:grid-cols-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Commandes en attente</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{pendingOrders.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Total commandes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{orders.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Éléments au menu</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{menuItems.length}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card className="shadow-card">
+                <CardHeader>
+                  <CardTitle>Profil restaurant</CardTitle>
+                  <CardDescription>Mettez à jour vos horaires, contacts et zones de livraison.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Nom commercial</span>
+                    <span className="font-semibold">{restaurant.name}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Téléphone</span>
+                    <span className="font-semibold">{restaurant.phone || '+221 77 000 00 00'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Adresse</span>
+                    <span className="font-semibold text-right">{restaurant.address}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Statut</span>
+                    <Badge variant={restaurant.is_active ? 'default' : 'secondary'}>
+                      {restaurant.is_active ? 'Ouvert' : 'Fermé'}
+                    </Badge>
+                  </div>
+                  <Button className="w-full" variant="outline">Mettre à jour le profil</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-card">
+                <CardHeader>
+                  <CardTitle>Flux de commandes en temps réel</CardTitle>
+                  <CardDescription>Visualisez immédiatement chaque nouvelle commande.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {pendingOrders.slice(0, 3).map((order) => (
+                    <div key={order.id} className="rounded-lg border p-4 bg-muted/40">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="font-semibold">#{order.id.slice(0, 8)}</p>
+                        <Badge>{order.status}</Badge>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-2 bg-gradient-to-r from-primary to-purple-600"
+                          style={{ width: `${(getOrderStep(order.status) / 5) * 100}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {new Date(order.created_at).toLocaleTimeString('fr-FR')} • Validation, préparation puis passage au livreur
+                      </p>
+                    </div>
+                  ))}
+                  {pendingOrders.length === 0 && (
+                    <p className="text-sm text-muted-foreground">En attente de nouvelles commandes...</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
 
@@ -209,7 +303,27 @@ const RestaurantDashboard = () => {
                         {new Date(order.created_at).toLocaleString('fr-FR')}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
+                      <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-2 bg-gradient-to-r from-primary to-green-500"
+                          style={{ width: `${(getOrderStep(order.status) / 5) * 100}%` }}
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {['Validation', 'Préparation', 'Prêt', 'Livreur', 'Livré'].map((label, index) => (
+                          <Badge key={label} variant={getOrderStep(order.status) >= index ? 'default' : 'secondary'}>
+                            {label}
+                          </Badge>
+                        ))}
+                      </div>
+                      <Separator />
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <Button variant="outline">Valider la préparation</Button>
+                        <Button variant="outline">Marquer prêt pour livraison</Button>
+                        <Button variant="outline">Notifier un livreur</Button>
+                        <Button variant="outline">Afficher le suivi en direct</Button>
+                      </div>
                       <div className="flex gap-2">
                         <Button>Accepter</Button>
                         <Button variant="outline">Refuser</Button>
@@ -368,11 +482,65 @@ const RestaurantDashboard = () => {
             </TabsContent>
 
             <TabsContent value="drivers">
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">Gestion des livreurs à venir</p>
-                </CardContent>
-              </Card>
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Livreurs associés ({assignedDrivers.length})</CardTitle>
+                    <CardDescription>Autorisez l'accès à vos commandes en temps réel.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {assignedDrivers.length === 0 && (
+                      <p className="text-sm text-muted-foreground">Aucun livreur associé pour le moment.</p>
+                    )}
+                    {assignedDrivers.map((driver) => (
+                      <div key={driver.id} className="rounded-lg border p-4 flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-semibold">{driver.name}</p>
+                          <p className="text-sm text-muted-foreground">{driver.phone} • {driver.vehicle}</p>
+                          <p className="text-xs text-muted-foreground">Zones : {driver.zones}</p>
+                        </div>
+                        <div className="flex flex-col gap-2 items-end">
+                          <Badge variant={driver.isAvailable ? 'default' : 'secondary'}>
+                            {driver.isAvailable ? 'Disponible' : 'En pause'}
+                          </Badge>
+                          <Button size="sm" variant="ghost" onClick={() => unassignDriver(driver.id)}>
+                            Retirer
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Associer un livreur</CardTitle>
+                    <CardDescription>Connectez vos coursiers internes ou freelances.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {driverPool.map((driver) => (
+                      <div key={driver.id} className="rounded-lg border p-4 flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-semibold">{driver.name}</p>
+                          <p className="text-sm text-muted-foreground">{driver.phone} • {driver.vehicle}</p>
+                          <p className="text-xs text-muted-foreground">Zones : {driver.zones}</p>
+                        </div>
+                        <div className="flex flex-col gap-2 items-end">
+                          <Badge variant={driver.isAvailable ? 'default' : 'secondary'}>
+                            {driver.isAvailable ? 'Disponible' : 'En pause'}
+                          </Badge>
+                          <Button size="sm" onClick={() => assignDriver(driver.id)}>
+                            Associer
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {driverPool.length === 0 && (
+                      <p className="text-sm text-muted-foreground">Tous vos livreurs sont déjà associés.</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         )}

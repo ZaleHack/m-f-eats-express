@@ -6,6 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Users, Store, Bike, DollarSign, ShoppingBag } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -187,6 +191,63 @@ const AdminDashboard = () => {
                 </Card>
               </TabsContent>
             </Tabs>
+            <div className="grid gap-6 md:grid-cols-3 mt-8">
+              <Card className="shadow-card">
+                <CardHeader>
+                  <CardTitle>Commissions & règles</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="commission">Commission plateforme (%)</Label>
+                    <Input id="commission" type="number" defaultValue={15} min={0} max={100} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="delivery-fee">Frais de livraison minimum (FCFA)</Label>
+                    <Input id="delivery-fee" type="number" defaultValue={1000} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="order-min">Montant minimum de commande</Label>
+                    <Input id="order-min" type="number" defaultValue={3500} />
+                  </div>
+                  <Button className="w-full">Mettre à jour</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-card">
+                <CardHeader>
+                  <CardTitle>Support utilisateur</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="support-email">File de support prioritaire</Label>
+                    <Input id="support-email" type="email" placeholder="support@mf-eats.com" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="support-note">Notes internes</Label>
+                    <Textarea id="support-note" rows={4} placeholder="Résumé des tickets critiques en cours" />
+                  </div>
+                  <Button variant="outline" className="w-full">Ouvrir le centre d'aide</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-card">
+                <CardHeader>
+                  <CardTitle>Gestion des accès</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {[{ role: 'Admin', count: stats.totalUsers }, { role: 'Restaurant', count: stats.totalRestaurants }, { role: 'Livreur', count: stats.totalDrivers }].map((item) => (
+                    <div key={item.role} className="flex items-center justify-between rounded-lg border p-3">
+                      <div>
+                        <p className="font-semibold">{item.role}</p>
+                        <p className="text-xs text-muted-foreground">{item.count} comptes</p>
+                      </div>
+                      <Badge variant="secondary">Actif</Badge>
+                    </div>
+                  ))}
+                  <Button variant="ghost" className="w-full">Gérer les rôles avancés</Button>
+                </CardContent>
+              </Card>
+            </div>
           </>
         )}
       </main>

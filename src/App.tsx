@@ -14,6 +14,7 @@ import ClientDashboard from "./pages/ClientDashboard";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import DriverDashboard from "./pages/DriverDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,14 @@ const App = () => (
           <Route path="/restaurants" element={<Restaurants />} />
           <Route path="/become-partner" element={<BecomePartner />} />
           <Route path="/become-driver" element={<BecomeDriver />} />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute allowedRoles={['client', 'restaurant', 'driver', 'admin']}>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard/client"
             element={

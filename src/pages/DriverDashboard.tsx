@@ -13,11 +13,23 @@ import { Tables } from '@/integrations/supabase/types';
 
 type Driver = Tables<'drivers'>;
 type Delivery = Tables<'deliveries'>;
+type Mission = {
+  id: string;
+  restaurant: string;
+  address: string;
+  payout: string;
+  distance: string;
+  status: 'en_attente' | 'acceptee' | 'refusee';
+};
 
 const DriverDashboard = () => {
   const [driver, setDriver] = useState<Driver | null>(null);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(true);
+  const [missions, setMissions] = useState<Mission[]>([
+    { id: 'MSN-8723', restaurant: 'Yass Cooking', address: 'Fann Hock, Dakar', payout: '1 800 FCFA', distance: '3.2 km', status: 'en_attente' },
+    { id: 'MSN-8724', restaurant: 'Teranga Burger', address: 'Plateau, Dakar', payout: '2 200 FCFA', distance: '4.5 km', status: 'en_attente' },
+  ]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,6 +62,7 @@ const DriverDashboard = () => {
 
   const activeDeliveries = deliveries.filter(d => !['delivered'].includes(d.status));
   const completedDeliveries = deliveries.filter(d => d.status === 'delivered');
+  const pendingMissions = missions.filter((mission) => mission.status === 'en_attente');
 
   const toggleAvailability = async () => {
     if (!driver) return;
@@ -62,6 +75,10 @@ const DriverDashboard = () => {
     if (!error) {
       setDriver({ ...driver, is_available: !driver.is_available });
     }
+  };
+
+  const updateMission = (id: string, status: Mission['status']) => {
+    setMissions((current) => current.map((mission) => mission.id === id ? { ...mission, status } : mission));
   };
 
   return (
@@ -125,6 +142,64 @@ const DriverDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{driver.rating || 0}/5</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr] mb-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Missions disponibles</CardTitle>
+                  <CardDescription>Acceptez ou refusez les livraisons proposées en direct.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {pendingMissions.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Aucune mission en attente.</p>
+                  )}
+                  {pendingMissions.map((mission) => (
+                    <div key={mission.id} className="rounded-lg border p-4 flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">{mission.id}</p>
+                        <p className="font-semibold">{mission.restaurant}</p>
+                        <p className="text-sm text-muted-foreground">{mission.address}</p>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Badge variant="secondary">{mission.distance}</Badge>
+                          <Badge className="bg-green-500/80">{mission.payout}</Badge>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Button size="sm" onClick={() => updateMission(mission.id, 'acceptee')}>Accepter</Button>
+                        <Button size="sm" variant="outline" onClick={() => updateMission(mission.id, 'refusee')}>
+                          Refuser
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Suivi GPS</CardTitle>
+                  <CardDescription>Visualisez l'itinéraire de vos livraisons en cours.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="rounded-xl border overflow-hidden">
+                    <div className="h-48 bg-gradient-to-br from-primary/20 via-purple-400/20 to-green-400/20 relative">
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#22c55e_0,transparent_45%)] opacity-60" />
+                      <div className="absolute inset-4 border-2 border-white/50 rounded-xl" />
+                      <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+                        Carte en direct
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Prochaine étape</span>
+                    <Badge>Retrait restaurant</Badge>
+                  </div>
+                  <Button className="w-full" variant="outline">
+                    Ouvrir la navigation
+                  </Button>
                 </CardContent>
               </Card>
             </div>
