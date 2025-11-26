@@ -14,18 +14,30 @@ const Navbar = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      setIsAuthenticated(!!user);
+      const isAdminSession = localStorage.getItem('admin-session') === 'true';
+      setIsAuthenticated(!!user || isAdminSession);
     };
     checkAuth();
+
+    const handleStorageChange = () => {
+      checkAuth();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       checkAuth();
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const handleLogout = async () => {
+    localStorage.removeItem('admin-session');
+    localStorage.removeItem('admin-role');
     await supabase.auth.signOut();
     navigate('/');
   };
