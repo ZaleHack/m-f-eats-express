@@ -7,6 +7,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Restaurants from "./pages/Restaurants";
 import ClientDashboard from "./pages/ClientDashboard";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import DriverDashboard from "./pages/DriverDashboard";
@@ -25,8 +26,9 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route 
-            path="/dashboard/client" 
+          <Route path="/restaurants" element={<Restaurants />} />
+          <Route
+            path="/dashboard/client"
             element={
               <ProtectedRoute allowedRoles={['client']}>
                 <ClientDashboard />
