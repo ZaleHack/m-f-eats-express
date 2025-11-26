@@ -12,6 +12,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const sqlFilePath = path.join(__dirname, 'setup-mysql.sql');
 
+function assertMysqlAvailable() {
+  const result = spawnSync('mysql', ['--version'], { encoding: 'utf-8' });
+
+  if (result.error) {
+    if (result.error.code === 'ENOENT') {
+      throw new Error(
+        'Le client MySQL (commande `mysql`) est introuvable. Installez le client MySQL ou ajoutez-le à votre PATH pour permettre le provisioning automatique.'
+      );
+    }
+
+    throw new Error(`Impossible d'exécuter la commande mysql : ${result.error.message}`);
+  }
+
+  if (result.status !== 0) {
+    throw new Error(`mysql --version a renvoyé le statut ${result.status}`);
+  }
+}
+
 function runMysql(sql, { captureOutput = false } = {}) {
   const args = ['-u', MYSQL_USER, '-h', MYSQL_HOST];
 
@@ -26,6 +44,12 @@ function runMysql(sql, { captureOutput = false } = {}) {
   });
 
   if (result.error) {
+    if (result.error.code === 'ENOENT') {
+      throw new Error(
+        'Le client MySQL (commande `mysql`) est introuvable. Installez le client MySQL ou ajoutez-le à votre PATH pour permettre le provisioning automatique.'
+      );
+    }
+
     throw new Error(`Impossible d'exécuter la commande mysql : ${result.error.message}`);
   }
 
@@ -42,6 +66,8 @@ function databaseExists() {
 }
 
 function ensureDatabase() {
+  assertMysqlAvailable();
+
   if (databaseExists()) {
     console.log(`La base de données "${DB_NAME}" existe déjà, aucun provisionnement nécessaire.`);
     return;
