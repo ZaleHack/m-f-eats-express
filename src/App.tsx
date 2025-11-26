@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Restaurants from "./pages/Restaurants";
+import BecomePartner from "./pages/BecomePartner";
+import BecomeDriver from "./pages/BecomeDriver";
 import ClientDashboard from "./pages/ClientDashboard";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import DriverDashboard from "./pages/DriverDashboard";
@@ -27,6 +29,8 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/restaurants" element={<Restaurants />} />
+          <Route path="/become-partner" element={<BecomePartner />} />
+          <Route path="/become-driver" element={<BecomeDriver />} />
           <Route
             path="/dashboard/client"
             element={
