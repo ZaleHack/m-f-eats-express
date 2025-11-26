@@ -71,3 +71,20 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Configuration de la base de données MySQL locale
+
+La plateforme M&F Eats est conçue pour fonctionner avec une base MySQL hébergée en local.
+
+- **Hôte** : `localhost`
+- **Utilisateur** : `root`
+- **Mot de passe** : vide
+- **Base utilisée** : `mf_eats` (créée automatiquement)
+
+Pour provisionner la base principale et toutes les tables métier (utilisateurs, restaurants, menus, commandes, livreurs, transactions, etc.), exécutez :
+
+```sh
+npm run setup:db
+```
+
+La commande utilise le client MySQL local pour créer la base et l’ensemble du schéma relationnel nécessaire au fonctionnement de l’application. Vous pouvez ensuite ajuster la configuration de sécurité (mot de passe, hôtes autorisés) selon vos besoins d’administration.
