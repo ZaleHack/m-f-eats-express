@@ -8,6 +8,14 @@ export const useUserRole = () => {
 
   useEffect(() => {
     const fetchUserRole = async () => {
+      const isAdminSession = localStorage.getItem('admin-session') === 'true';
+
+      if (isAdminSession) {
+        setRole('admin');
+        setLoading(false);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -30,11 +38,23 @@ export const useUserRole = () => {
 
     fetchUserRole();
 
+    const handleStorageChange = () => {
+      const isAdminSession = localStorage.getItem('admin-session') === 'true';
+      if (!isAdminSession) {
+        setRole(null);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       fetchUserRole();
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   return { role, loading };

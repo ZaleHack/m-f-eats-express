@@ -20,6 +20,20 @@ const Login = () => {
     setLoading(true);
 
     try {
+      // Support simple admin login without Supabase
+      if (email === "admin" && password === "admin") {
+        localStorage.setItem("admin-session", "true");
+        localStorage.setItem("admin-role", "admin");
+
+        toast({
+          title: "Connexion réussie",
+          description: "Bienvenue sur le tableau de bord administrateur !",
+        });
+
+        navigate("/dashboard/admin");
+        return;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

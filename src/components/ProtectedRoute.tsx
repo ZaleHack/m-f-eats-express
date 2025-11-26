@@ -16,6 +16,19 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
 
   useEffect(() => {
     const checkAuth = async () => {
+      const isAdminSession = localStorage.getItem('admin-session') === 'true';
+
+      if (isAdminSession) {
+        setIsAuthenticated(true);
+        setHasPermission(
+          allowedRoles && allowedRoles.length > 0
+            ? allowedRoles.includes('admin')
+            : true
+        );
+        setLoading(false);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
