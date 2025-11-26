@@ -37,11 +37,13 @@ const Navbar = () => {
 
   const navLinks = [
     { href: "/", label: "Accueil" },
-    ...(isAuthenticated ? [{ href: getDashboardLink(), label: "Tableau de bord" }] : [
-      { href: "/restaurants", label: "Restaurants" },
-      { href: "/become-partner", label: "Devenir partenaire" },
-      { href: "/become-driver", label: "Devenir livreur" },
-    ]),
+    { href: "/restaurants", label: "Restaurants" },
+    ...(isAuthenticated
+      ? [{ href: getDashboardLink(), label: "Tableau de bord" }]
+      : [
+          { href: "/become-partner", label: "Devenir partenaire" },
+          { href: "/become-driver", label: "Devenir livreur" },
+        ]),
   ];
 
   return (
