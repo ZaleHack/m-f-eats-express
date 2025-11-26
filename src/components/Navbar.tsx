@@ -1,18 +1,47 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, UtensilsCrossed } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Menu, UtensilsCrossed, LogOut } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Navbar = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { role } = useUserRole();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    };
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      checkAuth();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
+
+  const getDashboardLink = () => {
+    if (!role) return '/';
+    return `/dashboard/${role}`;
+  };
+
   const navLinks = [
     { href: "/", label: "Accueil" },
-    { href: "/restaurants", label: "Restaurants" },
-    { href: "/become-partner", label: "Devenir partenaire" },
-    { href: "/become-driver", label: "Devenir livreur" },
+    ...(isAuthenticated ? [{ href: getDashboardLink(), label: "Tableau de bord" }] : [
+      { href: "/restaurants", label: "Restaurants" },
+      { href: "/become-partner", label: "Devenir partenaire" },
+      { href: "/become-driver", label: "Devenir livreur" },
+    ]),
   ];
 
   return (
@@ -37,12 +66,21 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost" asChild>
-            <Link to="/login">Connexion</Link>
-          </Button>
-          <Button asChild className="bg-gradient-hero hover:opacity-90 transition-opacity">
-            <Link to="/signup">S'inscrire</Link>
-          </Button>
+          {isAuthenticated ? (
+            <Button variant="ghost" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Déconnexion
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" asChild>
+                <Link to="/login">Connexion</Link>
+              </Button>
+              <Button asChild className="bg-gradient-hero hover:opacity-90 transition-opacity">
+                <Link to="/signup">S'inscrire</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Navigation */}
@@ -64,12 +102,21 @@ const Navbar = () => {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 mt-4">
-                <Button variant="outline" asChild>
-                  <Link to="/login">Connexion</Link>
-                </Button>
-                <Button asChild className="bg-gradient-hero">
-                  <Link to="/signup">S'inscrire</Link>
-                </Button>
+                {isAuthenticated ? (
+                  <Button variant="outline" onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Déconnexion
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" asChild>
+                      <Link to="/login">Connexion</Link>
+                    </Button>
+                    <Button asChild className="bg-gradient-hero">
+                      <Link to="/signup">S'inscrire</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </SheetContent>

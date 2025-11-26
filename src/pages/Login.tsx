@@ -28,13 +28,22 @@ const Login = () => {
       if (error) throw error;
 
       if (data.session) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .single();
+
         toast({
           title: "Connexion réussie",
           description: "Bienvenue sur M&F Eats !",
         });
 
-        // Redirect based on user role will be implemented after database setup
-        navigate("/");
+        if (roleData) {
+          navigate(`/dashboard/${roleData.role}`);
+        } else {
+          navigate('/');
+        }
       }
     } catch (error: any) {
       toast({
