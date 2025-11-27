@@ -2,15 +2,15 @@ import { readFileSync } from 'fs';
 import { spawnSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-const DB_NAME = 'mf_eats';
-const MYSQL_HOST = 'localhost';
-const MYSQL_USER = 'root';
-const MYSQL_PASSWORD = '';
+import { MYSQL_DATABASE, MYSQL_HOST, MYSQL_PASSWORD, MYSQL_USER, mysqlCliArgs, mysqlConnectionLabel } from './mysql-config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const sqlFilePath = path.join(__dirname, 'setup-mysql.sql');
+
+function hydrateSqlTemplate(sql) {
+  return sql.replace(/`mf_eats`/g, `\`${MYSQL_DATABASE}\``);
+}
 
 function assertMysqlAvailable() {
   const result = spawnSync('mysql', ['--version'], { encoding: 'utf-8' });
@@ -35,13 +35,7 @@ function assertMysqlAvailable() {
 }
 
 function runMysql(sql, { captureOutput = false } = {}) {
-  const args = ['-u', MYSQL_USER, '-h', MYSQL_HOST];
-
-  if (MYSQL_PASSWORD) {
-    args.push(`-p${MYSQL_PASSWORD}`);
-  }
-
-  const result = spawnSync('mysql', args, {
+  const result = spawnSync('mysql', mysqlCliArgs(), {
     input: sql,
     encoding: 'utf-8',
     stdio: captureOutput ? ['pipe', 'pipe', 'pipe'] : ['pipe', 'inherit', 'inherit'],
@@ -65,8 +59,8 @@ function runMysql(sql, { captureOutput = false } = {}) {
 }
 
 function databaseExists() {
-  const result = runMysql(`SHOW DATABASES LIKE '${DB_NAME}';`, { captureOutput: true });
-  return result.stdout && result.stdout.includes(DB_NAME);
+  const result = runMysql(`SHOW DATABASES LIKE '${MYSQL_DATABASE}';`, { captureOutput: true });
+  return result.stdout && result.stdout.includes(MYSQL_DATABASE);
 }
 
 function ensureDatabase() {
@@ -77,14 +71,18 @@ function ensureDatabase() {
   }
 
   if (databaseExists()) {
-    console.log(`La base de données "${DB_NAME}" existe déjà, aucun provisionnement nécessaire.`);
+    console.log(
+      `La base de données "${MYSQL_DATABASE}" existe déjà sur ${mysqlConnectionLabel()}, aucun provisionnement nécessaire.`
+    );
     return;
   }
 
-  console.log(`La base de données "${DB_NAME}" est absente. Initialisation en cours...`);
-  const sql = readFileSync(sqlFilePath, 'utf-8');
+  console.log(
+    `La base de données "${MYSQL_DATABASE}" est absente sur ${mysqlConnectionLabel()}. Initialisation en cours...`
+  );
+  const sql = hydrateSqlTemplate(readFileSync(sqlFilePath, 'utf-8'));
   runMysql(sql);
-  console.log(`Base de données "${DB_NAME}" créée automatiquement et prête à l'emploi.`);
+  console.log(`Base de données "${MYSQL_DATABASE}" créée automatiquement et prête à l'emploi.`);
 }
 
 try {
