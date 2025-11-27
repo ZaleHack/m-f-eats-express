@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import HowItWorks from "./pages/HowItWorks";
 import Experience from "./pages/Experience";
+import RestaurantCreation from "./pages/RestaurantCreation";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/become-driver" element={<BecomeDriver />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/experience" element={<Experience />} />
+          <Route path="/restaurant/create" element={<RestaurantCreation />} />
           <Route
             path="/profile"
             element={
