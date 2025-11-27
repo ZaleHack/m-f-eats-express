@@ -8,26 +8,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { MapPin, ShoppingCart, Clock, Star, CreditCard, Smartphone } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 
-interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  category: string;
-}
-
-interface Restaurant {
-  id: string;
-  name: string;
-  category: string;
-  address: string;
-  rating: number;
-  eta: string;
-  distance: string;
-  menu: MenuItem[];
-}
+type MenuItem = Tables<"menu_items">;
+type Restaurant = Tables<"restaurants"> & { menu_items: MenuItem[] };
 
 interface CartItem extends MenuItem {
   restaurantId: string;
@@ -35,117 +20,11 @@ interface CartItem extends MenuItem {
   quantity: number;
 }
 
-const restaurantsData: Restaurant[] = [
-  {
-    id: "teranga",
-    name: "Teranga Express",
-    category: "Africain",
-    address: "Plateau, Dakar",
-    rating: 4.8,
-    eta: "25-35 min",
-    distance: "2.1 km",
-    menu: [
-      {
-        id: "thieb",
-        name: "Thiéboudiène",
-        description: "Poisson braisé, riz rouge, légumes",
-        price: 5500,
-        image: "https://images.unsplash.com/photo-1524182576065-4c1b142b6d9d?auto=format&fit=crop&w=600&q=80",
-        category: "Plats",
-      },
-      {
-        id: "yassa",
-        name: "Poulet Yassa",
-        description: "Poulet mariné au citron, oignons caramélisés",
-        price: 4800,
-        image: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=600&q=80",
-        category: "Plats",
-      },
-      {
-        id: "bissap",
-        name: "Bissap glacé",
-        description: "Jus d'hibiscus, menthe fraîche",
-        price: 1200,
-        image: "https://images.unsplash.com/photo-1612178537253-579c2a639207?auto=format&fit=crop&w=600&q=80",
-        category: "Boissons",
-      },
-    ],
-  },
-  {
-    id: "marina",
-    name: "La Marina",
-    category: "Italien",
-    address: "Les Almadies",
-    rating: 4.6,
-    eta: "30-40 min",
-    distance: "3.4 km",
-    menu: [
-      {
-        id: "pizza",
-        name: "Pizza Regina",
-        description: "Jambon, champignons, olives",
-        price: 6500,
-        image: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80",
-        category: "Plats",
-      },
-      {
-        id: "pasta",
-        name: "Pâtes aux fruits de mer",
-        description: "Moules, crevettes, sauce tomate maison",
-        price: 7200,
-        image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=600&q=80",
-        category: "Plats",
-      },
-      {
-        id: "tiramisu",
-        name: "Tiramisu maison",
-        description: "Mascarpone crémeux, café, cacao",
-        price: 3200,
-        image: "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=600&q=80",
-        category: "Desserts",
-      },
-    ],
-  },
-  {
-    id: "sakura",
-    name: "Sakura",
-    category: "Asiatique",
-    address: "Mermoz",
-    rating: 4.7,
-    eta: "20-30 min",
-    distance: "1.5 km",
-    menu: [
-      {
-        id: "ramen",
-        name: "Ramen miso",
-        description: "Bouillon miso, porc, œuf mariné",
-        price: 6800,
-        image: "https://images.unsplash.com/photo-1478749485505-2a903a729c63?auto=format&fit=crop&w=600&q=80",
-        category: "Plats",
-      },
-      {
-        id: "sushi",
-        name: "Plateau Sushi",
-        description: "12 pièces variées, sauce soja",
-        price: 8400,
-        image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80",
-        category: "Plats",
-      },
-      {
-        id: "mochi",
-        name: "Mochi glacé",
-        description: "Sélection de trois parfums",
-        price: 2800,
-        image: "https://images.unsplash.com/photo-1548943487-a2e4e43b4853?auto=format&fit=crop&w=600&q=80",
-        category: "Desserts",
-      },
-    ],
-  },
-];
-
 const driverOrigin = { x: 40, y: 45 };
 
 const Restaurants = () => {
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<string>("Toutes");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<"wave" | "orange">("wave");
@@ -163,6 +42,27 @@ const Restaurants = () => {
   );
 
   useEffect(() => {
+    const fetchRestaurants = async () => {
+      const { data } = await supabase
+        .from("restaurants")
+        .select("*, menu_items(*)")
+        .eq("is_active", true)
+        .order("name");
+
+      if (data) {
+        setRestaurants(
+          data.map((restaurant) => ({
+            ...restaurant,
+            menu_items: restaurant.menu_items || [],
+          }))
+        );
+      }
+
+      setLoading(false);
+    };
+
+    fetchRestaurants();
+
     const interval = setInterval(() => {
       setDrivers((current) =>
         current.map((driver) => ({
@@ -177,16 +77,18 @@ const Restaurants = () => {
   }, []);
 
   const categories = useMemo(
-    () => ["Toutes", ...new Set(restaurantsData.map((restaurant) => restaurant.category))],
-    []
+    () => ["Toutes", ...new Set(restaurants.map((restaurant) => restaurant.category || "Autre"))],
+    [restaurants]
   );
 
   const filteredRestaurants = useMemo(() => {
-    if (category === "Toutes") return restaurantsData;
-    return restaurantsData.filter((restaurant) => restaurant.category === category);
-  }, [category]);
+    if (category === "Toutes") return restaurants;
+    return restaurants.filter((restaurant) => restaurant.category === category);
+  }, [category, restaurants]);
 
   const addToCart = (item: MenuItem, restaurant: Restaurant) => {
+    const price = Number(item.price || 0);
+
     setCart((current) => {
       const existing = current.find((cartItem) => cartItem.id === item.id && cartItem.restaurantId === restaurant.id);
       if (existing) {
@@ -201,6 +103,7 @@ const Restaurants = () => {
         ...current,
         {
           ...item,
+          price,
           restaurantId: restaurant.id,
           restaurantName: restaurant.name,
           quantity: 1,
@@ -259,34 +162,51 @@ const Restaurants = () => {
             </TabsList>
 
             <div className="grid gap-4">
-              {filteredRestaurants.map((restaurant) => (
+              {loading && (
+                <Card>
+                  <CardContent className="p-6 text-center text-muted-foreground">Chargement des restaurants...</CardContent>
+                </Card>
+              )}
+              {!loading && filteredRestaurants.length === 0 && (
+                <Card>
+                  <CardContent className="p-6 text-center text-muted-foreground">
+                    Aucun restaurant actif trouvé pour le moment.
+                  </CardContent>
+                </Card>
+              )}
+              {!loading && filteredRestaurants.map((restaurant) => (
                 <Card key={restaurant.id}>
                   <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div>
                       <CardTitle className="flex items-center gap-3 text-2xl">
                         {restaurant.name}
-                        <Badge variant="secondary">{restaurant.category}</Badge>
+                        <Badge variant="secondary">{restaurant.category || "Restaurant"}</Badge>
                       </CardTitle>
                       <CardDescription className="flex flex-wrap items-center gap-3 mt-2">
                         <span className="flex items-center gap-1 text-sm text-foreground">
-                          <Star className="h-4 w-4 text-amber-500" /> {restaurant.rating}
+                          <Star className="h-4 w-4 text-amber-500" />
+                          4,7 / 5
                         </span>
-                        <span className="flex items-center gap-1 text-sm"><Clock className="h-4 w-4" /> {restaurant.eta}</span>
-                        <span className="flex items-center gap-1 text-sm"><MapPin className="h-4 w-4" /> {restaurant.distance}</span>
-                        <span className="text-sm text-muted-foreground">{restaurant.address}</span>
+                        <span className="flex items-center gap-1 text-sm">
+                          <Clock className="h-4 w-4" /> 20 - 35 min
+                        </span>
+                        <span className="flex items-center gap-1 text-sm">
+                          <MapPin className="h-4 w-4" /> {restaurant.address}
+                        </span>
+                        <span className="text-sm text-muted-foreground">{restaurant.phone}</span>
                       </CardDescription>
                     </div>
                     <Badge className="w-fit" variant="outline">
-                      Menus disponibles: {restaurant.menu.length}
+                      Menus disponibles: {restaurant.menu_items.length}
                     </Badge>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-4 md:grid-cols-2">
-                      {restaurant.menu.map((item) => (
+                      {restaurant.menu_items.map((item) => (
                         <Card key={item.id} className="overflow-hidden">
                           <div className="relative h-32 w-full bg-muted">
                             <img
-                              src={item.image}
+                              src={item.image_url || "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?auto=format&fit=crop&w=800&q=80"}
                               alt={item.name}
                               className="h-full w-full object-cover"
                               loading="lazy"
@@ -296,9 +216,9 @@ const Restaurants = () => {
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <CardTitle className="text-lg">{item.name}</CardTitle>
-                                <CardDescription>{item.description}</CardDescription>
+                                <CardDescription>{item.description || "Délicieux plat disponible à la livraison"}</CardDescription>
                               </div>
-                              <Badge>{item.category}</Badge>
+                              <Badge>{item.category || "Menu"}</Badge>
                             </div>
                           </CardHeader>
                           <CardContent className="flex items-center justify-between">
