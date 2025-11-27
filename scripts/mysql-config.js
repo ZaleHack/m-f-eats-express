@@ -1,5 +1,5 @@
-export const MYSQL_DATABASE = process.env.MYSQL_DATABASE || 'mf_eats';
-export const MYSQL_HOST = process.env.MYSQL_HOST || 'localhost';
+export const MYSQL_DATABASE = 'mf_eats';
+export const MYSQL_HOST = 'mysql';
 export const MYSQL_USER = process.env.MYSQL_USER || 'root';
 export const MYSQL_PASSWORD = process.env.MYSQL_PASSWORD || '';
 export const MYSQL_CLIENT = process.env.MYSQL_CLIENT || 'mysql';
