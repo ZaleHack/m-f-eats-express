@@ -100,4 +100,4 @@ La commande utilise le client MySQL local pour créer la base et l’ensemble du
 
 > ℹ️ Lorsqu'on démarre l'application (`npm run dev` ou `npm run preview`), un script vérifie automatiquement l'existence de la base `mf_eats` et la crée si nécessaire, en s'appuyant sur le même fichier SQL. La commande manuelle reste disponible pour un provisionnement explicite.
 
-> ⚠️ Si le client `mysql` n'est pas installé sur votre machine, le démarrage continuera mais le provisionnement automatique sera ignoré. Installez le paquet `mysql-client` (ou équivalent) ou exécutez le fichier `scripts/setup-mysql.sql` avec l'outil de votre choix pour créer la base avant d'utiliser l'application.
+> ⚠️ Si le client `mysql` n'est pas installé sur votre machine, le démarrage continuera mais le provisionnement automatique sera ignoré. Vous pouvez définir `MYSQL_CLIENT=mariadb` (client fourni par MariaDB) pour activer le provisioning ou installer le paquet `mysql-client` (ou équivalent). En cas d'absence totale de client, exécutez le fichier `scripts/setup-mysql.sql` avec l'outil de votre choix pour créer la base avant d'utiliser l'application.

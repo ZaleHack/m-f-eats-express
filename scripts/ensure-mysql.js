@@ -2,40 +2,63 @@ import { readFileSync } from 'fs';
 import { spawnSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { MYSQL_DATABASE, MYSQL_HOST, MYSQL_PASSWORD, MYSQL_USER, mysqlCliArgs, mysqlConnectionLabel } from './mysql-config.js';
+import {
+  MYSQL_CLIENT,
+  MYSQL_DATABASE,
+  MYSQL_HOST,
+  MYSQL_PASSWORD,
+  MYSQL_USER,
+  mysqlCliArgs,
+  mysqlConnectionLabel,
+} from './mysql-config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const sqlFilePath = path.join(__dirname, 'setup-mysql.sql');
+let mysqlClient = MYSQL_CLIENT;
 
 function hydrateSqlTemplate(sql) {
   return sql.replace(/`mf_eats`/g, `\`${MYSQL_DATABASE}\``);
 }
 
-function assertMysqlAvailable() {
-  const result = spawnSync('mysql', ['--version'], { encoding: 'utf-8' });
+function tryMysqlCommand(command) {
+  const result = spawnSync(command, ['--version'], { encoding: 'utf-8' });
 
   if (result.error) {
     if (result.error.code === 'ENOENT') {
-      console.warn(
-        'Provisioning MySQL ignoré : le client MySQL (`mysql`) est introuvable. Installez mysql-client ou ajoutez la commande à votre PATH pour activer le provisioning automatique.'
-      );
-      console.warn('Vous pouvez sinon exécuter le SQL manuellement : mysql -u root -h localhost < scripts/setup-mysql.sql');
       return false;
     }
 
-    throw new Error(`Impossible d'exécuter la commande mysql : ${result.error.message}`);
+    throw new Error(`Impossible d'exécuter la commande ${command} : ${result.error.message}`);
   }
 
   if (result.status !== 0) {
-    throw new Error(`mysql --version a renvoyé le statut ${result.status}`);
+    throw new Error(`${command} --version a renvoyé le statut ${result.status}`);
   }
 
+  mysqlClient = command;
   return true;
 }
 
+function assertMysqlAvailable() {
+  if (tryMysqlCommand(mysqlClient)) {
+    return true;
+  }
+
+  if (mysqlClient === 'mysql' && tryMysqlCommand('mariadb')) {
+    console.warn('Client MySQL introuvable, fallback automatique vers le client MariaDB (`mariadb`).');
+    return true;
+  }
+
+  console.warn(
+    `Provisioning MySQL ignoré : le client MySQL (\`${mysqlClient}\`) est introuvable. Installez mysql-client ou ajoutez la commande à votre PATH pour activer le provisioning automatique.`
+  );
+  console.warn('Vous pouvez sinon exécuter le SQL manuellement : mysql -u root -h localhost < scripts/setup-mysql.sql');
+  return false;
+}
+
 function runMysql(sql, { captureOutput = false } = {}) {
-  const result = spawnSync('mysql', mysqlCliArgs(), {
+  const result = spawnSync(mysqlClient, mysqlCliArgs(), {
     input: sql,
     encoding: 'utf-8',
     stdio: captureOutput ? ['pipe', 'pipe', 'pipe'] : ['pipe', 'inherit', 'inherit'],
@@ -44,15 +67,15 @@ function runMysql(sql, { captureOutput = false } = {}) {
   if (result.error) {
     if (result.error.code === 'ENOENT') {
       throw new Error(
-        'Le client MySQL (commande `mysql`) est introuvable. Installez le client MySQL ou ajoutez-le à votre PATH pour permettre le provisioning automatique.'
+        `Le client MySQL (commande \`${mysqlClient}\`) est introuvable. Installez le client MySQL ou ajoutez-le à votre PATH pour permettre le provisioning automatique.`
       );
     }
 
-    throw new Error(`Impossible d'exécuter la commande mysql : ${result.error.message}`);
+    throw new Error(`Impossible d'exécuter la commande ${mysqlClient} : ${result.error.message}`);
   }
 
   if (result.status !== 0) {
-    throw new Error(`mysql a renvoyé le statut ${result.status}`);
+    throw new Error(`${mysqlClient} a renvoyé le statut ${result.status}`);
   }
 
   return result;
