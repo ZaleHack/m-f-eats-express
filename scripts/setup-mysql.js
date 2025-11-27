@@ -25,6 +25,12 @@ function runMysql(sql) {
     stdio: ['pipe', 'inherit', 'inherit'],
   });
 
+  if (result.error?.code === 'ENOENT') {
+    throw new Error(
+      'Le client MySQL (`mysql`) est introuvable. Installez mysql-client ou exécutez le fichier scripts/setup-mysql.sql avec un autre outil pour provisionner la base.'
+    );
+  }
+
   if (result.status !== 0) {
     throw new Error(`mysql command exited with status ${result.status}`);
   }

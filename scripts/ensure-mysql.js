@@ -17,9 +17,11 @@ function assertMysqlAvailable() {
 
   if (result.error) {
     if (result.error.code === 'ENOENT') {
-      throw new Error(
-        'Le client MySQL (commande `mysql`) est introuvable. Installez le client MySQL ou ajoutez-le à votre PATH pour permettre le provisioning automatique.'
+      console.warn(
+        'Provisioning MySQL ignoré : le client MySQL (`mysql`) est introuvable. Installez mysql-client ou ajoutez la commande à votre PATH pour activer le provisioning automatique.'
       );
+      console.warn('Vous pouvez sinon exécuter le SQL manuellement : mysql -u root -h localhost < scripts/setup-mysql.sql');
+      return false;
     }
 
     throw new Error(`Impossible d'exécuter la commande mysql : ${result.error.message}`);
@@ -28,6 +30,8 @@ function assertMysqlAvailable() {
   if (result.status !== 0) {
     throw new Error(`mysql --version a renvoyé le statut ${result.status}`);
   }
+
+  return true;
 }
 
 function runMysql(sql, { captureOutput = false } = {}) {
@@ -66,7 +70,11 @@ function databaseExists() {
 }
 
 function ensureDatabase() {
-  assertMysqlAvailable();
+  const mysqlAvailable = assertMysqlAvailable();
+
+  if (!mysqlAvailable) {
+    return;
+  }
 
   if (databaseExists()) {
     console.log(`La base de données "${DB_NAME}" existe déjà, aucun provisionnement nécessaire.`);
