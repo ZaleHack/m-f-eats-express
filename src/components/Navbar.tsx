@@ -53,6 +53,7 @@ const Navbar = () => {
     { href: "/how-it-works", label: "Comment ça marche" },
     { href: "/experience", label: "Expérience" },
     { href: "/drivers", label: "Livreurs" },
+    { href: "/features", label: "Fonctionnalités" },
     { href: "/support", label: "Support" },
     ...(isAuthenticated
       ? [
