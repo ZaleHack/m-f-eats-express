@@ -76,15 +76,24 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/c
 
 La plateforme M&F Eats est conçue pour fonctionner avec une base MySQL hébergée en local.
 
-- **Hôte** : `localhost`
-- **Utilisateur** : `root`
-- **Mot de passe** : vide
-- **Base utilisée** : `mf_eats` (créée automatiquement)
+- **Hôte** : `localhost` (surchargé via `MYSQL_HOST`)
+- **Utilisateur** : `root` (surchargé via `MYSQL_USER`)
+- **Mot de passe** : vide (surchargé via `MYSQL_PASSWORD`)
+- **Base utilisée** : `mf_eats` (surchargé via `MYSQL_DATABASE`, créée automatiquement)
 
 Pour provisionner la base principale et toutes les tables métier (utilisateurs, restaurants, menus, commandes, livreurs, transactions, etc.), exécutez :
 
 ```sh
 npm run setup:db
+```
+
+Les scripts utilisent les variables d'environnement suivantes (voir `.env.example`) :
+
+```ini
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=
+MYSQL_DATABASE=mf_eats
 ```
 
 La commande utilise le client MySQL local pour créer la base et l’ensemble du schéma relationnel nécessaire au fonctionnement de l’application. Vous pouvez ensuite ajuster la configuration de sécurité (mot de passe, hôtes autorisés) selon vos besoins d’administration.

@@ -2,24 +2,18 @@ import { readFileSync } from 'fs';
 import { spawnSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-const DB_NAME = 'mf_eats';
-const MYSQL_HOST = 'localhost';
-const MYSQL_USER = 'root';
-const MYSQL_PASSWORD = '';
+import { MYSQL_DATABASE, MYSQL_HOST, MYSQL_PASSWORD, MYSQL_USER, mysqlCliArgs, mysqlConnectionLabel } from './mysql-config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const sqlFilePath = path.join(__dirname, 'setup-mysql.sql');
 
+function hydrateSqlTemplate(sql) {
+  return sql.replace(/`mf_eats`/g, `\`${MYSQL_DATABASE}\``);
+}
+
 function runMysql(sql) {
-  const args = ['-u', MYSQL_USER, '-h', MYSQL_HOST];
-
-  if (MYSQL_PASSWORD) {
-    args.push(`-p${MYSQL_PASSWORD}`);
-  }
-
-  const result = spawnSync('mysql', args, {
+  const result = spawnSync('mysql', mysqlCliArgs(), {
     input: sql,
     encoding: 'utf-8',
     stdio: ['pipe', 'inherit', 'inherit'],
@@ -38,11 +32,11 @@ function runMysql(sql) {
 
 function main() {
   try {
-    const sql = readFileSync(sqlFilePath, 'utf-8');
+    const sql = hydrateSqlTemplate(readFileSync(sqlFilePath, 'utf-8'));
     console.log('Initialisation de la base de données MySQL locale...');
     runMysql(sql);
     console.log(
-      `Base de données "${DB_NAME}" et tables essentielles configurées sur ${MYSQL_HOST} avec l'utilisateur ${MYSQL_USER} (mot de passe vide).`
+      `Base de données "${MYSQL_DATABASE}" et tables essentielles configurées sur ${mysqlConnectionLabel()}.`
     );
   } catch (error) {
     console.error('Erreur lors de la configuration de la base de données MySQL:', error.message);
