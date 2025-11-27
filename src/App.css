@@ -1,42 +1,47 @@
+:root {
+  color-scheme: light;
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(circle at 10% 20%, hsl(25 95% 95%), transparent 25%),
+    radial-gradient(circle at 90% 10%, hsl(142 76% 95%), transparent 20%),
+    radial-gradient(circle at 80% 80%, hsl(10 90% 96%), transparent 30%),
+    hsl(var(--background));
+  color: inherit;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.gradient-surface {
+  position: relative;
+  overflow: hidden;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.gradient-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, hsl(25 95% 98%), transparent 50%),
+    linear-gradient(225deg, hsl(142 76% 96%), transparent 40%);
+  opacity: 0.6;
+  pointer-events: none;
 }
 
-.card {
-  padding: 2em;
+.glass-card {
+  backdrop-filter: blur(12px);
+  background: hsl(var(--card) / 0.82);
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-card-hover);
 }
 
-.read-the-docs {
-  color: #888;
+.soft-shadow {
+  box-shadow: 0 20px 60px -30px hsl(25 95% 35% / 0.35);
 }
