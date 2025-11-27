@@ -50,6 +50,7 @@ const Navbar = () => {
   const navLinks = [
     { href: "/", label: "Accueil" },
     { href: "/restaurants", label: "Restaurants" },
+    { href: "/how-it-works", label: "Comment ça marche" },
     ...(isAuthenticated
       ? [
           { href: getDashboardLink(), label: "Tableau de bord" },
