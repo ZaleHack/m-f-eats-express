@@ -20,6 +20,9 @@ import HowItWorks from "./pages/HowItWorks";
 import Experience from "./pages/Experience";
 import RestaurantCreation from "./pages/RestaurantCreation";
 import Drivers from "./pages/Drivers";
+import Support from "./pages/Support";
+import Legal from "./pages/Legal";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +42,9 @@ const App = () => (
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/experience" element={<Experience />} />
           <Route path="/drivers" element={<Drivers />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/legal" element={<Legal />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/restaurant/create" element={<RestaurantCreation />} />
           <Route
             path="/profile"

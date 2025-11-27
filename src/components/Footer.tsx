@@ -32,9 +32,9 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div>
-            <h3 className="font-semibold mb-4">Partenaires</h3>
-            <ul className="space-y-2 text-sm">
+        <div>
+          <h3 className="font-semibold mb-4">Partenaires</h3>
+          <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/become-partner" className="text-muted-foreground hover:text-primary transition-colors">
                   Devenir restaurant partenaire
@@ -45,8 +45,29 @@ const Footer = () => {
                   Devenir livreur
                 </Link>
               </li>
-            </ul>
-          </div>
+          </ul>
+        </div>
+
+        <div>
+          <h3 className="font-semibold mb-4">Support</h3>
+          <ul className="space-y-2 text-sm">
+            <li>
+              <Link to="/support" className="text-muted-foreground hover:text-primary transition-colors">
+                Centre d'aide
+              </Link>
+            </li>
+            <li>
+              <Link to="/legal" className="text-muted-foreground hover:text-primary transition-colors">
+                Conditions d'utilisation
+              </Link>
+            </li>
+            <li>
+              <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
+                Confidentialité
+              </Link>
+            </li>
+          </ul>
+        </div>
 
           <div>
             <h3 className="font-semibold mb-4">Suivez-nous</h3>
