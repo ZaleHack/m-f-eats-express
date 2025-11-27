@@ -15,13 +15,12 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performLogin = async (loginEmail: string, loginPassword: string) => {
     setLoading(true);
 
     try {
       // Support simple admin login without Supabase
-      if (email === "admin" && password === "admin") {
+      if (loginEmail === "admin" && loginPassword === "admin") {
         localStorage.setItem("admin-session", "true");
         localStorage.setItem("admin-role", "admin");
 
@@ -35,8 +34,8 @@ const Login = () => {
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: loginEmail,
+        password: loginPassword,
       });
 
       if (error) throw error;
@@ -68,6 +67,17 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performLogin(email, password);
+  };
+
+  const handleAdminQuickLogin = async () => {
+    setEmail("admin");
+    setPassword("admin");
+    await performLogin("admin", "admin");
   };
 
   return (
@@ -114,6 +124,15 @@ const Login = () => {
               disabled={loading}
             >
               {loading ? "Connexion..." : "Se connecter"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleAdminQuickLogin}
+              disabled={loading}
+            >
+              Connexion administrateur (admin/admin)
             </Button>
           </form>
 
