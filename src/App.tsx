@@ -16,6 +16,7 @@ import DriverDashboard from "./pages/DriverDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import HowItWorks from "./pages/HowItWorks";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/restaurants" element={<Restaurants />} />
           <Route path="/become-partner" element={<BecomePartner />} />
           <Route path="/become-driver" element={<BecomeDriver />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
           <Route
             path="/profile"
             element={
