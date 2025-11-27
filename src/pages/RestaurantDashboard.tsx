@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Store, ShoppingBag, Users } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
+import { useToast } from '@/hooks/use-toast';
 
 type Restaurant = Tables<'restaurants'>;
 type Order = Tables<'orders'>;
@@ -30,6 +31,8 @@ const RestaurantDashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
   const [driverPool, setDriverPool] = useState<DriverOverview[]>([
     { id: 'drv-01', name: 'Awa Diop', phone: '+221770000001', vehicle: 'Moto', zones: 'Plateau, Point E', isAvailable: true },
     { id: 'drv-02', name: 'Moussa Fall', phone: '+221780000002', vehicle: 'Scooter', zones: 'Almadies, Ouakam', isAvailable: false },
@@ -91,45 +94,89 @@ const RestaurantDashboard = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleAddMenuItem = (event: FormEvent<HTMLFormElement>) => {
+  const handleAddMenuItem = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!restaurant || !newItem.name || !newItem.price) return;
 
-    const item: MenuItem = {
-      id: crypto.randomUUID(),
-      name: newItem.name,
-      description: newItem.description,
-      price: Number(newItem.price),
-      category: newItem.category || 'Divers',
-      image_url: newItem.imagePreview || null,
-      is_available: newItem.isAvailable,
-      options: null,
-      restaurant_id: restaurant.id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    } as MenuItem;
+    setSaving(true);
+    const { data, error } = await supabase
+      .from('menu_items')
+      .insert({
+        name: newItem.name,
+        description: newItem.description,
+        price: Number(newItem.price),
+        category: newItem.category || 'Divers',
+        image_url: newItem.imagePreview || null,
+        is_available: newItem.isAvailable,
+        options: null,
+        restaurant_id: restaurant.id,
+      })
+      .select()
+      .single();
 
-    setMenuItems((items) => [item, ...items]);
-    setNewItem({
-      name: '',
-      description: '',
-      price: '',
-      category: '',
-      imagePreview: '',
-      isAvailable: true,
-    });
+    if (error) {
+      toast({
+        title: "Erreur lors de l'ajout",
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else if (data) {
+      setMenuItems((items) => [data, ...items]);
+      toast({ title: 'Plat ajouté', description: `${data.name} a été ajouté au menu.` });
+      setNewItem({
+        name: '',
+        description: '',
+        price: '',
+        category: '',
+        imagePreview: '',
+        isAvailable: true,
+      });
+    }
+
+    setSaving(false);
   };
 
-  const toggleAvailability = (id: string) => {
+  const toggleAvailability = async (id: string) => {
+    const item = menuItems.find((menuItem) => menuItem.id === id);
+    if (!item) return;
+
+    const { error } = await supabase
+      .from('menu_items')
+      .update({ is_available: !item.is_available })
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: "Impossible de mettre à jour",
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setMenuItems((items) =>
-      items.map((item) =>
-        item.id === id ? { ...item, is_available: !item.is_available, updated_at: new Date().toISOString() } : item
+      items.map((menuItem) =>
+        menuItem.id === id
+          ? { ...menuItem, is_available: !menuItem.is_available, updated_at: new Date().toISOString() }
+          : menuItem
       )
     );
   };
 
-  const removeMenuItem = (id: string) => {
+  const removeMenuItem = async (id: string) => {
+    const { error } = await supabase.from('menu_items').delete().eq('id', id);
+
+    if (error) {
+      toast({
+        title: "Suppression impossible",
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setMenuItems((items) => items.filter((item) => item.id !== id));
+    toast({ title: 'Plat supprimé', description: 'Le plat a été retiré du menu.' });
   };
 
   const assignDriver = (driverId: string) => {
@@ -415,8 +462,8 @@ const RestaurantDashboard = () => {
                         )}
                       </div>
 
-                      <Button type="submit" className="w-full">
-                        <Plus className="mr-2 h-4 w-4" /> Publier le plat
+                      <Button type="submit" className="w-full" disabled={saving}>
+                        <Plus className="mr-2 h-4 w-4" /> {saving ? 'Publication...' : 'Publier le plat'}
                       </Button>
                     </form>
                   </CardContent>
@@ -459,7 +506,7 @@ const RestaurantDashboard = () => {
                             </CardHeader>
                             <CardContent className="space-y-3">
                               <div className="flex items-center justify-between">
-                                <span className="text-lg font-bold">{item.price} FCFA</span>
+                                <span className="text-lg font-bold">{Number(item.price).toLocaleString()} FCFA</span>
                                 <span className="text-xs text-muted-foreground">Maj {new Date(item.updated_at).toLocaleDateString('fr-FR')}</span>
                               </div>
                               <Separator />
