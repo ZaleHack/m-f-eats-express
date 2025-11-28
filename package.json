@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "prepreview": "npm run ensure:db",
     "setup:db": "node scripts/setup-mysql.js",
-    "ensure:db": "node scripts/ensure-mysql.js"
+    "ensure:db": "node scripts/ensure-mysql.js",
+    "api": "node server/index.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -48,10 +49,14 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "cors": "^2.8.5",
     "date-fns": "^3.6.0",
+    "dotenv": "^16.4.7",
     "embla-carousel-react": "^8.6.0",
+    "express": "^4.21.1",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
+    "mysql2": "^3.12.0",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",

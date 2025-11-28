@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle2, Clock, MapPin, Plus, Shield, Store, Utensils } from 'lucide-react';
+import { submitFormToMysql } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 const statusFlow = ['reçue', 'confirmée', 'en_preparation', 'prête', 'en_livraison', 'livrée'];
 
@@ -55,6 +57,9 @@ const RestaurantCreation = () => {
     category: '',
     preparationTime: '',
   });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isSavingMenu, setIsSavingMenu] = useState(false);
+  const { toast } = useToast();
 
   const availabilityRate = useMemo(() => {
     if (menuItems.length === 0) return 0;
@@ -62,14 +67,31 @@ const RestaurantCreation = () => {
     return Math.round((available / menuItems.length) * 100);
   }, [menuItems]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Simule la sauvegarde du restaurant côté back-office
+    setIsSavingProfile(true);
+
+    try {
+      await submitFormToMysql('restaurant_profile', restaurantInfo);
+      toast({
+        title: 'Profil enregistré',
+        description: 'Les informations du restaurant sont maintenant stockées dans MySQL.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Enregistrement impossible',
+        description: error?.message || 'Vérifiez votre connexion et réessayez.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
-  const addMenuItem = (event: FormEvent<HTMLFormElement>) => {
+  const addMenuItem = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!newItem.name || !newItem.price) return;
+    setIsSavingMenu(true);
     const item: MenuItem = {
       id: crypto.randomUUID(),
       name: newItem.name,
@@ -81,6 +103,22 @@ const RestaurantCreation = () => {
 
     setMenuItems((current) => [item, ...current]);
     setNewItem({ name: '', price: '', category: '', preparationTime: '' });
+
+    try {
+      await submitFormToMysql('restaurant_menu_item', item);
+      toast({
+        title: 'Plat enregistré',
+        description: `${item.name} est enregistré dans MySQL avec vos autres envois.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Enregistrement MySQL impossible',
+        description: error?.message || 'Réessayez après vérification de la connexion.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingMenu(false);
+    }
   };
 
   const toggleAvailability = (id: string) => {
@@ -283,7 +321,9 @@ const RestaurantCreation = () => {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-3">
-                      <Button type="submit">Enregistrer le profil</Button>
+                      <Button type="submit" disabled={isSavingProfile}>
+                        {isSavingProfile ? 'Enregistrement...' : 'Enregistrer le profil'}
+                      </Button>
                       <Button type="button" variant="outline">Prévisualiser la fiche</Button>
                     </div>
                   </form>
@@ -372,9 +412,9 @@ const RestaurantCreation = () => {
                         />
                       </div>
                     </div>
-                    <Button type="submit">
+                    <Button type="submit" disabled={isSavingMenu}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Ajouter au menu
+                      {isSavingMenu ? 'Ajout en cours...' : 'Ajouter au menu'}
                     </Button>
                   </form>
                 </CardContent>

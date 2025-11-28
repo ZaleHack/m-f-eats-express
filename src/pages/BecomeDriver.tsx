@@ -8,8 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Bike, Clock3, Shield, Sparkles, MapPin, PhoneCall, ArrowRight } from "lucide-react";
+import { submitFormToMysql } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const BecomeDriver = () => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -17,16 +20,33 @@ const BecomeDriver = () => {
     experience: "",
     vehicle: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: connect to Supabase function
-    console.log("Driver form submitted", formData);
+    setLoading(true);
+
+    try {
+      await submitFormToMysql("driver_application", formData);
+      toast({
+        title: "Candidature envoyée",
+        description: "Nous vous recontactons très vite pour finaliser votre dossier.",
+      });
+      setFormData({ fullName: "", phone: "", city: "", experience: "", vehicle: "" });
+    } catch (error: any) {
+      toast({
+        title: "Envoi impossible",
+        description: error?.message || "Veuillez réessayer dans quelques instants.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const perks = [
@@ -248,8 +268,8 @@ const BecomeDriver = () => {
                     rows={4}
                   />
                 </div>
-                <Button type="submit" className="w-full bg-gradient-hero">
-                  Envoyer ma candidature
+                <Button type="submit" className="w-full bg-gradient-hero" disabled={loading}>
+                  {loading ? "Envoi en cours..." : "Envoyer ma candidature"}
                 </Button>
               </form>
             </CardContent>
