@@ -8,8 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Store, Calendar, ShieldCheck, Rocket, ArrowRight, Phone } from "lucide-react";
+import { submitFormToMysql } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const BecomePartner = () => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     restaurantName: "",
     contactName: "",
@@ -18,16 +21,33 @@ const BecomePartner = () => {
     address: "",
     message: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: connect to Supabase function
-    console.log("Partner form submitted", formData);
+    setLoading(true);
+
+    try {
+      await submitFormToMysql("partner_application", formData);
+      toast({
+        title: "Demande envoyée",
+        description: "Votre restaurant va être vérifié par notre équipe.",
+      });
+      setFormData({ restaurantName: "", contactName: "", phone: "", email: "", address: "", message: "" });
+    } catch (error: any) {
+      toast({
+        title: "Impossible d'envoyer la demande",
+        description: error?.message || "Merci de réessayer dans un instant.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const benefits = [
@@ -253,8 +273,8 @@ const BecomePartner = () => {
                     rows={4}
                   />
                 </div>
-                <Button type="submit" className="w-full bg-gradient-hero">
-                  Envoyer ma demande
+                <Button type="submit" className="w-full bg-gradient-hero" disabled={loading}>
+                  {loading ? "Envoi..." : "Envoyer ma demande"}
                 </Button>
               </form>
             </CardContent>
